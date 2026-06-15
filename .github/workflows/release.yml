@@ -79,13 +79,22 @@ jobs:
           if (Test-Path $staging) { Remove-Item $staging -Recurse -Force }
           New-Item -ItemType Directory -Path $staging | Out-Null
 
-          $include = @('manifest.json', 'index.html', 'css', 'js', 'fonts')
-          foreach ($item in $include) {
+          # Required files must exist; optional asset folders are bundled only if present
+          $required = @('manifest.json', 'index.html')
+          $optional = @('css', 'js', 'fonts')
+          foreach ($item in $required) {
             if (-not (Test-Path $item)) {
               Write-Error "Required path missing from repo: $item"
               exit 1
             }
             Copy-Item -Path $item -Destination $staging -Recurse -Force
+          }
+          foreach ($item in $optional) {
+            if (Test-Path $item) {
+              Copy-Item -Path $item -Destination $staging -Recurse -Force
+            } else {
+              Write-Host "Optional path not present, skipping: $item"
+            }
           }
 
           Compress-Archive -Path (Join-Path $staging '*') -DestinationPath $env:PLUGIN_FILE -Force
