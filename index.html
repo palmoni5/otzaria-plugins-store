@@ -1,0 +1,900 @@
+﻿<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>חנות תוספים</title>
+  <style>
+    html, body {   overflow-x: hidden; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f7f3ee;
+      color: #2c1b02;
+      direction: rtl;
+    }
+
+    /* ── כותרת ── */
+    header {
+      background: #fff;
+      border-bottom: 1px solid #e8ddd0;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    header h1 { font-size: 18px; font-weight: 700; color: #2c1b02; flex: 1; }
+    #plugin-count { font-size: 13px; color: #7a6040; }
+
+    #refresh-btn {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      border: 1.5px solid #d9ccbe;
+      background: #faf7f3;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      transition: background .15s, border-color .15s;
+      flex-shrink: 0;
+    }
+    #refresh-btn:hover { background: #f0ece8; border-color: #2c1b02; }
+    #refresh-btn.spinning { animation: spin .7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── פילטרים ── */
+    #filters {
+      background: #fff;
+      padding: 12px 20px;
+      border-bottom: 1px solid #e8ddd0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+    #search {
+      flex: 1;
+      min-width: 180px;
+      padding: 8px 12px;
+      border: 1px solid #d9ccbe;
+      border-radius: 8px;
+      font-size: 14px;
+      background: #faf7f3;
+      outline: none;
+      direction: rtl;
+    }
+    #search:focus { border-color: #2c1b02; }
+
+    #status-filter {
+      padding: 8px 12px;
+      border: 1px solid #d9ccbe;
+      border-radius: 8px;
+      font-size: 14px;
+      background: #faf7f3;
+      outline: none;
+      direction: rtl;
+    }
+
+    /* ── תגיות ── */
+    #tags { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 20px; background: #faf7f3; border-bottom: 1px solid #ede4d8; }
+    .tag-btn {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid #d9ccbe;
+      background: #fff;
+      color: #5a4020;
+      transition: all .15s;
+    }
+    .tag-btn:hover { border-color: #2c1b02; color: #2c1b02; }
+    .tag-btn.active { background: #2c1b02; color: #fff; border-color: #2c1b02; }
+
+    /* ── רשת כרטיסים ── */
+    #grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+      padding: 20px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 14px;
+      border: 1px solid #e8ddd0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: box-shadow .2s, transform .2s;
+      cursor: pointer;
+    }
+    .card:hover { box-shadow: 0 6px 24px rgba(44,27,2,.12); transform: translateY(-2px); }
+
+    .card-img {
+      width: 100%;
+      aspect-ratio: 16/9;
+      object-fit: cover;
+      background: #f0e8dc;
+    }
+    .card-img-placeholder {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: linear-gradient(135deg, #f0e8dc, #e8ddd0);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      color: #b0956a;
+    }
+
+    .card-body { padding: 14px; flex: 1; display: flex; flex-direction: column; gap: 10px; }
+
+    .card-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+    .badge {
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .badge-stable   { background: #e8f0e0; color: #3a6020; }
+    .badge-beta     { background: #f0e8d0; color: #7a5010; }
+    .badge-experimental { background: #f5e8e0; color: #8a3010; }
+    .badge-version  { background: #f0ece8; color: #5a4020; }
+
+    .card-title { font-size: 16px; font-weight: 700; color: #2c1b02; }
+    .card-desc  { font-size: 13px; color: #5a4020; line-height: 1.5; flex: 1;
+      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+    .card-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+    .card-tag {
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      background: #f0ece8;
+      color: #7a6040;
+    }
+
+    .card-actions { display: flex; gap: 8px; }
+    .btn {
+      flex: 1;
+      padding: 8px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      border: none;
+      transition: all .15s;
+    }
+    .btn-primary { background: #2c1b02; color: #fff; }
+    .btn-primary:hover { background: #1a1000; }
+    .btn-secondary { background: #fff; color: #2c1b02; border: 1.5px solid #d9ccbe; }
+    .btn-secondary:hover { background: #f7f3ee; border-color: #2c1b02; }
+
+    /* ── מצבים ── */
+    #loading, #error, #empty {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 60px 20px; gap: 12px; text-align: center;
+    }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid #e8ddd0;
+      border-top-color: #2c1b02;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    #error .icon { font-size: 40px; }
+    #error p { color: #8a3010; font-size: 14px; }
+    .hidden { display: none !important; }
+
+    /* ── מודל עדכונים ── */
+    #updates-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(44,27,2,.4);
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #updates-modal {
+      background: #fff;
+      border-radius: 18px;
+      border: 1px solid #e8ddd0;
+      width: 100%;
+      max-width: 480px;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 16px 48px rgba(44,27,2,.18);
+    }
+    .modal-header {
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid #ede4d8;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .modal-header-icon { font-size: 22px; }
+    .modal-header h2 { font-size: 16px; font-weight: 700; flex: 1; }
+    .modal-close {
+      background: none; border: none; cursor: pointer;
+      font-size: 18px; color: #9a7a50; line-height: 1;
+      padding: 4px; border-radius: 6px; transition: color .15s;
+    }
+    .modal-close:hover { color: #2c1b02; }
+    .modal-body {  flex: 1; padding: 12px 0; }
+    .update-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 20px;
+      border-bottom: 1px solid #f0ece8;
+    }
+    .update-row:last-child { border-bottom: none; }
+    .update-info { flex: 1; min-width: 0; }
+    .update-name { font-size: 14px; font-weight: 700; color: #2c1b02; }
+    .update-versions { font-size: 12px; color: #9a7a50; margin-top: 2px; }
+    .update-btn {
+      flex-shrink: 0;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      background: #2c1b02;
+      color: #fff;
+      transition: background .15s;
+      white-space: nowrap;
+    }
+    .update-btn:hover { background: #1a1000; }
+    .update-btn:disabled { opacity: .6; cursor: default; }
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid #ede4d8;
+      display: flex;
+      justify-content: flex-end;
+    }
+    .update-all-btn {
+      padding: 8px 20px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      background: #2c1b02;
+      color: #fff;
+      transition: background .15s;
+    }
+    .update-all-btn:hover { background: #1a1000; }
+    .update-all-btn:disabled { opacity: .6; cursor: default; }
+
+    /* ── דף פרטי תוסף ── */
+    #detail-page {
+      padding: 20px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #5a4020;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 6px 0;
+      margin-bottom: 16px;
+      transition: color .15s;
+    }
+    .back-btn:hover { color: #2c1b02; }
+    .back-arrow { font-size: 18px; line-height: 1; }
+
+    .detail-header {
+      background: #fff;
+      border-radius: 16px;
+      border: 1px solid #e8ddd0;
+      padding: 24px;
+      margin-bottom: 16px;
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+    @media (max-width: 600px) {
+      .detail-header { grid-template-columns: 1fr; }
+    }
+
+    .detail-main-img {
+      width: 100%;
+      aspect-ratio: 4/3;
+      object-fit: cover;
+      border-radius: 12px;
+      background: #f0e8dc;
+    }
+    .detail-main-img-placeholder {
+      width: 100%;
+      aspect-ratio: 4/3;
+      background: linear-gradient(135deg, #f0e8dc, #e8ddd0);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+      color: #b0956a;
+    }
+
+    .detail-info { display: flex; flex-direction: column; gap: 12px; }
+    .detail-name { font-size: 24px; font-weight: 800; color: #2c1b02; line-height: 1.3; }
+    .detail-desc { font-size: 14px; color: #5a4020; line-height: 1.7; white-space: pre-wrap; }
+    .detail-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+    .detail-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+    .detail-install-btn {
+      padding: 10px 24px;
+      border-radius: 24px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      background: #2c1b02;
+      color: #fff;
+      transition: background .15s;
+    }
+    .detail-install-btn:hover { background: #1a1000; }
+    .detail-install-btn:disabled { opacity: .6; cursor: default; }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 500px) { .detail-grid { grid-template-columns: 1fr; } }
+
+    .detail-card {
+      background: #fff;
+      border-radius: 14px;
+      border: 1px solid #e8ddd0;
+      padding: 18px;
+    }
+    .detail-card h2 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #2c1b02;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .detail-card h2 .icon { font-size: 18px; }
+
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .info-cell {
+      background: #faf7f3;
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+    .info-cell.full { grid-column: 1 / -1; }
+    .info-label { font-size: 11px; color: #9a7a50; margin-bottom: 3px; }
+    .info-value { font-size: 13px; font-weight: 700; color: #2c1b02; }
+
+    .detail-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+    .detail-tag {
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      background: #f0ece8;
+      color: #7a6040;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all .15s;
+    }
+    .detail-tag:hover { border-color: #2c1b02; color: #2c1b02; }
+
+    .screenshots-section {
+      background: #fff;
+      border-radius: 14px;
+      border: 1px solid #e8ddd0;
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+    .screenshots-section h2 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #2c1b02;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .screenshots-row {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      scroll-snap-type: x mandatory;
+    }
+    .screenshots-row::-webkit-scrollbar { height: 6px; }
+    .screenshots-row::-webkit-scrollbar-thumb { background: #d9ccbe; border-radius: 3px; }
+    .screenshot-thumb {
+      flex-shrink: 0;
+      width: 220px;
+      aspect-ratio: 16/9;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid #e8ddd0;
+      cursor: pointer;
+      scroll-snap-align: start;
+      transition: transform .15s;
+    }
+    .screenshot-thumb:hover { transform: scale(1.02); }
+
+    /* ── lightbox ── */
+    #lightbox {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.85);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #lightbox img {
+      max-width: 100%;
+      max-height: 90vh;
+      border-radius: 10px;
+      object-fit: contain;
+    }
+    #lightbox-close {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      background: rgba(255,255,255,.15);
+      border: none;
+      color: #fff;
+      font-size: 24px;
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .15s;
+    }
+    #lightbox-close:hover { background: rgba(255,255,255,.3); }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>חנות תוספים</h1>
+  <span id="plugin-count"></span>
+  <button id="refresh-btn" title="רענן רשימה"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
+</header>
+
+<div id="filters">
+  <input id="search" type="search" placeholder="חיפוש לפי שם, תיאור או תגית...">
+  <select id="status-filter">
+    <option value="all">כל הסטטוסים</option>
+    <option value="stable">יציב</option>
+    <option value="beta">בטא</option>
+    <option value="experimental">ניסיוני</option>
+  </select>
+</div>
+
+<div id="tags" class="hidden"></div>
+
+<div id="loading"><div class="spinner"></div><p>טוען תוספים...</p></div>
+<div id="error" class="hidden"><span class="icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#8a3010" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span><p id="error-msg"></p></div>
+<div id="grid" class="hidden"></div>
+<div id="empty" class="hidden"><p>לא נמצאו תוספים לפי הסינון.</p></div>
+
+<div id="detail-page" class="hidden"></div>
+
+<div id="updates-backdrop" class="hidden">
+  <div id="updates-modal">
+    <div class="modal-header">
+      <span class="modal-header-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></span>
+      <h2 id="updates-title"></h2>
+      <button class="modal-close" id="updates-close">✕</button>
+    </div>
+    <div class="modal-body" id="updates-list"></div>
+    <div class="modal-footer">
+      <button class="update-all-btn" id="update-all-btn">עדכן הכל</button>
+    </div>
+  </div>
+</div>
+
+<div id="lightbox" class="hidden">
+  <button id="lightbox-close">✕</button>
+  <img id="lightbox-img" src="" alt="">
+</div>
+
+<script>
+  const API = 'https://otzaria.org/api/plugins';
+  const BASE = 'https://otzaria.org';
+
+  let allPlugins = [];
+  let installedPlugins = [];   // [{ name, version }]
+  let installedKeys = new Set();
+  let activeTag = 'all';
+
+  const statusLabel = { stable: 'יציב', beta: 'בטא', experimental: 'ניסיוני' };
+  const statusClass = { stable: 'badge-stable', beta: 'badge-beta', experimental: 'badge-experimental' };
+
+  // ── עדכונים ─────────────────────────────────────────────────────
+  function getAvailableUpdates() {
+    return installedPlugins.flatMap(inst => {
+      const newer = allPlugins.find(p => p.name === inst.name && p.version !== inst.version);
+      return newer ? [{ installed: inst, plugin: newer }] : [];
+    });
+  }
+
+  function showUpdatesModal(updates) {
+    document.getElementById('updates-title').textContent =
+      `עדכונים זמינים (${updates.length})`;
+
+    const list = document.getElementById('updates-list');
+    list.innerHTML = '';
+    updates.forEach(({ installed, plugin }) => {
+      const downloadUrl = plugin.downloadUrl.startsWith('http')
+        ? plugin.downloadUrl : BASE + plugin.downloadUrl;
+      const row = document.createElement('div');
+      row.className = 'update-row';
+      row.innerHTML = `
+        <div class="update-info">
+          <div class="update-name">${esc(plugin.name)}</div>
+          <div class="update-versions">${esc(installed.version)} ← ${esc(plugin.version)}</div>
+        </div>
+        <button class="update-btn" data-url="${esc(downloadUrl)}">עדכן</button>`;
+      list.appendChild(row);
+    });
+
+    list.querySelectorAll('.update-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        btn.textContent = 'מעדכן...';
+        await installPlugin(btn.dataset.url);
+        btn.textContent = 'נשלח ✓';
+      });
+    });
+
+    const updateAllBtn = document.getElementById('update-all-btn');
+    updateAllBtn.disabled = false;
+    updateAllBtn.textContent = 'עדכן הכל';
+    updateAllBtn.onclick = async () => {
+      updateAllBtn.disabled = true;
+      updateAllBtn.textContent = 'שולח...';
+      const btns = list.querySelectorAll('.update-btn:not(:disabled)');
+      for (const btn of btns) {
+        btn.disabled = true;
+        btn.textContent = 'מעדכן...';
+        await installPlugin(btn.dataset.url);
+        btn.textContent = 'נשלח ✓';
+      }
+      updateAllBtn.textContent = 'הכל נשלח ✓';
+    };
+
+    show('updates-backdrop');
+  }
+
+  document.getElementById('updates-close').onclick = () => hide('updates-backdrop');
+  document.getElementById('updates-backdrop').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) hide('updates-backdrop');
+  });
+
+  // ── רענון ────────────────────────────────────────────────────────
+  const refreshBtn = document.getElementById('refresh-btn');
+  refreshBtn.addEventListener('click', () => {
+    if (refreshBtn.classList.contains('spinning')) return;
+    reload();
+  });
+
+  async function reload() {
+    refreshBtn.classList.add('spinning');
+    hide('grid'); hide('empty'); hide('error');
+    show('loading');
+    allPlugins = [];
+    installedPlugins = [];
+    installedKeys = new Set();
+    try {
+      const [fetchRes, installedRes] = await Promise.all([
+        Otzaria.call('network.fetch', { url: API }),
+        Otzaria.call('plugin.listInstalled', {}),
+      ]);
+      if (!fetchRes.success) throw new Error(fetchRes.error?.message || 'שגיאת רשת');
+      if (fetchRes.data.status !== 200) throw new Error(`HTTP ${fetchRes.data.status}`);
+      allPlugins = JSON.parse(fetchRes.data.body);
+      if (installedRes.success) {
+        installedPlugins = installedRes.data;
+        installedPlugins.forEach(p => installedKeys.add(`${p.name}@${p.version}`));
+      }
+      initTags();
+      render();
+      show('grid');
+      const updates = getAvailableUpdates();
+      if (updates.length > 0) showUpdatesModal(updates);
+    } catch (e) {
+      document.getElementById('error-msg').textContent = 'שגיאה בטעינת התוספים: ' + e.message;
+      show('error');
+    }
+    hide('loading');
+    refreshBtn.classList.remove('spinning');
+  }
+
+  // ── טעינה ראשונית ────────────────────────────────────────────────
+  async function loadPlugins() {
+    await new Promise(resolve => window.addEventListener('plugin.ready', resolve, { once: true }));
+    await reload();
+  }
+
+  // ── תגיות ────────────────────────────────────────────────────────
+  function initTags() {
+    const tagSet = new Set();
+    allPlugins.forEach(p => (p.tags || []).forEach(t => tagSet.add(t)));
+    const sorted = [...tagSet].sort((a, b) => a.localeCompare(b, 'he'));
+
+    const container = document.getElementById('tags');
+    container.innerHTML = '';
+    container.appendChild(makeTag('כל התגיות', 'all', true));
+    sorted.forEach(t => container.appendChild(makeTag(t, t, false)));
+    container.classList.remove('hidden');
+  }
+
+  function makeTag(label, value, active) {
+    const btn = document.createElement('button');
+    btn.className = 'tag-btn' + (active ? ' active' : '');
+    btn.textContent = label;
+    btn.dataset.value = value;
+    btn.onclick = () => {
+      activeTag = value;
+      document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      render();
+    };
+    return btn;
+  }
+
+  // ── רינדור רשת כרטיסים ──────────────────────────────────────────
+  function render() {
+    const q = document.getElementById('search').value.toLowerCase();
+    const status = document.getElementById('status-filter').value;
+
+    const list = allPlugins.filter(p => !installedKeys.has(`${p.name}@${p.version}`)).filter(p => {
+      if (status !== 'all' && p.status !== status) return false;
+      if (activeTag !== 'all' && !(p.tags || []).includes(activeTag)) return false;
+      if (q) {
+        const hay = [p.name, p.shortDescription, p.description, ...(p.tags || [])].join(' ').toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+
+    const countEl = document.getElementById('plugin-count');
+    countEl.textContent = list.length === allPlugins.length
+      ? `${allPlugins.length} תוספים`
+      : `${list.length} מתוך ${allPlugins.length}`;
+
+    const grid = document.getElementById('grid');
+    grid.innerHTML = '';
+
+    if (list.length === 0) { show('empty'); hide('grid'); return; }
+    hide('empty'); show('grid');
+    list.forEach(p => grid.appendChild(makeCard(p)));
+  }
+
+  function makeCard(p) {
+    const art = document.createElement('article');
+    art.className = 'card';
+
+    const downloadUrl = p.downloadUrl.startsWith('http') ? p.downloadUrl : BASE + p.downloadUrl;
+    const imgUrl = p.image ? (p.image.startsWith('http') ? p.image : BASE + p.image) : null;
+
+    art.innerHTML = `
+      ${imgUrl
+        ? `<img class="card-img" src="${imgUrl}" alt="${p.name}" loading="lazy">`
+        : `<div class="card-img-placeholder"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#b0956a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>`}
+      <div class="card-body">
+        <div class="card-badges">
+          <span class="badge ${statusClass[p.status] || ''}">${statusLabel[p.status] || p.status}</span>
+          <span class="badge badge-version">גרסה ${esc(p.version)}</span>
+        </div>
+        <div class="card-title">${esc(p.name)}</div>
+        <div class="card-desc">${esc(p.shortDescription || '')}</div>
+        ${(p.tags || []).length > 0
+          ? `<div class="card-tags">${p.tags.slice(0,4).map(t => `<span class="card-tag">${esc(t)}</span>`).join('')}</div>`
+          : ''}
+        <div class="card-actions">
+          <button class="btn btn-primary install-btn" data-url="${esc(downloadUrl)}">התקנה</button>
+        </div>
+      </div>`;
+
+    art.addEventListener('click', (e) => {
+      if (e.target.closest('.install-btn')) return;
+      showDetail(p);
+    });
+
+    return art;
+  }
+
+  // ── דף פרטים ────────────────────────────────────────────────────
+  function showDetailPage() {
+    hide('filters'); hide('tags'); hide('grid'); hide('empty'); hide('loading'); hide('error');
+    document.getElementById('plugin-count').textContent = '';
+    show('detail-page');
+  }
+
+  function showListPage() {
+    hide('detail-page');
+    show('filters');
+    document.getElementById('tags').classList.remove('hidden');
+    render();
+  }
+
+  function showDetail(p) {
+    showDetailPage();
+
+    const downloadUrl = p.downloadUrl.startsWith('http') ? p.downloadUrl : BASE + p.downloadUrl;
+    const imgUrl = p.image ? (p.image.startsWith('http') ? p.image : BASE + p.image) : null;
+    const screenshots = (p.screenshots || []).map(s => s.startsWith('http') ? s : BASE + s);
+
+    const detail = document.getElementById('detail-page');
+    detail.innerHTML = `
+      <button class="back-btn" id="back-btn"><span class="back-arrow">→</span> חזרה לחנות</button>
+      <div class="detail-header">
+        ${imgUrl
+          ? `<img class="detail-main-img" src="${esc(imgUrl)}" alt="${esc(p.name)}" loading="lazy">`
+          : `<div class="detail-main-img-placeholder"><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#b0956a" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>`}
+        <div class="detail-info">
+          <div class="detail-name">${esc(p.name)}</div>
+          <div class="detail-badges">
+            <span class="badge ${statusClass[p.status] || ''}">${statusLabel[p.status] || esc(p.status)}</span>
+            <span class="badge badge-version">גרסה ${esc(p.version)}</span>
+          </div>
+          <div class="detail-desc">${esc(p.description || p.shortDescription || '')}</div>
+          <div class="detail-actions">
+            <button class="detail-install-btn" id="detail-install-btn" data-url="${esc(downloadUrl)}">התקנה</button>
+          </div>
+        </div>
+      </div>
+      <div class="detail-grid">
+        <div class="detail-card">
+          <h2><span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span> מידע כללי</h2>
+          <div class="info-grid">
+            <div class="info-cell">
+              <div class="info-label">גרסה</div>
+              <div class="info-value">${esc(p.version)}</div>
+            </div>
+            <div class="info-cell">
+              <div class="info-label">סטטוס</div>
+              <div class="info-value">${statusLabel[p.status] || esc(p.status)}</div>
+            </div>
+            ${p.author ? `
+            <div class="info-cell">
+              <div class="info-label">מפתח</div>
+              <div class="info-value">${esc(p.author)}</div>
+            </div>` : ''}
+            ${p.updatedAt ? `
+            <div class="info-cell">
+              <div class="info-label">עודכן</div>
+              <div class="info-value">${esc(formatDate(p.originalDate || p.updatedAt))}</div>
+            </div>` : ''}
+            ${p.compatibleWith ? `
+            <div class="info-cell full">
+              <div class="info-label">תאימות</div>
+              <div class="info-value">${esc(p.compatibleWith)}</div>
+            </div>` : ''}
+            <div class="info-cell full">
+              <div class="info-label">חיבור אינטרנט</div>
+              <div class="info-value">${p.requiresNetwork ? 'נדרש' : '✓ לא נדרש'}</div>
+            </div>
+          </div>
+        </div>
+        <div class="detail-card">
+          <h2><span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></span> תגיות</h2>
+          <div class="detail-tags">
+            ${(p.tags || []).map(t => `<span class="detail-tag" data-tag="${esc(t)}">${esc(t)}</span>`).join('')}
+          </div>
+        </div>
+      </div>
+      ${screenshots.length > 0 ? `
+      <div class="screenshots-section">
+        <h2><span class="icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></span> צילומי מסך</h2>
+        <div class="screenshots-row">
+          ${screenshots.map(s => `<img class="screenshot-thumb" src="${esc(s)}" alt="צילום מסך" loading="lazy">`).join('')}
+        </div>
+      </div>` : ''}`;
+
+    document.getElementById('back-btn').onclick = showListPage;
+
+    document.getElementById('detail-install-btn').addEventListener('click', async (e) => {
+      const btn = e.currentTarget;
+      btn.disabled = true;
+      btn.textContent = 'מתקין...';
+      try {
+        await installPlugin(btn.dataset.url);
+        btn.textContent = 'נשלח ✓';
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = 'התקנה';
+        alert('שגיאה בהתקנה: ' + err.message);
+      }
+    });
+
+    detail.querySelectorAll('.detail-tag').forEach(tagEl => {
+      tagEl.addEventListener('click', () => {
+        showListPage();
+        activeTag = tagEl.dataset.tag;
+        document.querySelectorAll('.tag-btn').forEach(b => {
+          b.classList.toggle('active', b.dataset.value === activeTag);
+        });
+        render();
+      });
+    });
+
+    detail.querySelectorAll('.screenshot-thumb').forEach(img => {
+      img.addEventListener('click', () => {
+        document.getElementById('lightbox-img').src = img.src;
+        show('lightbox');
+      });
+    });
+  }
+
+  // ── כלים ─────────────────────────────────────────────────────────
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function formatDate(dateStr) {
+    try {
+      const d = dateStr.includes('T') ? new Date(dateStr) : new Date(dateStr + 'T12:00:00Z');
+      return d.toLocaleDateString('he-IL', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
+    } catch { return dateStr; }
+  }
+
+  function show(id) { document.getElementById(id).classList.remove('hidden'); }
+  function hide(id) { document.getElementById(id).classList.add('hidden'); }
+
+  async function installPlugin(downloadUrl) {
+    await Otzaria.call('plugin.requestInstall', { url: downloadUrl });
+  }
+
+  document.getElementById('grid').addEventListener('click', async (e) => {
+    const btn = e.target.closest('.install-btn');
+    if (!btn) return;
+    btn.disabled = true;
+    btn.textContent = 'מתקין...';
+    try {
+      await installPlugin(btn.dataset.url);
+      btn.textContent = 'נשלח ✓';
+    } catch (err) {
+      btn.textContent = 'שגיאה';
+    }
+  });
+
+  document.getElementById('lightbox-close').onclick = () => hide('lightbox');
+  document.getElementById('lightbox').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) hide('lightbox');
+  });
+
+  document.getElementById('search').addEventListener('input', render);
+  document.getElementById('status-filter').addEventListener('change', render);
+
+  loadPlugins();
+</script>
+</body>
+</html>
