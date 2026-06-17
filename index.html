@@ -476,6 +476,50 @@
       transition: background .15s;
     }
     #lightbox-close:hover { background: rgba(255,255,255,.3); }
+
+    /* ── הודעת תוסף חדש ── */
+    #new-toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #2c1b02;
+      color: #fff;
+      border-radius: 14px;
+      padding: 12px 14px 12px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 8px 32px rgba(44,27,2,.32);
+      z-index: 80;
+      max-width: calc(100% - 40px);
+      animation: toast-in .3s ease;
+    }
+    @keyframes toast-in {
+      from { opacity: 0; transform: translate(-50%, 24px); }
+      to   { opacity: 1; transform: translate(-50%, 0); }
+    }
+    #new-toast .toast-icon { display: flex; flex-shrink: 0; }
+    #new-toast .toast-text { font-size: 14px; font-weight: 700; flex: 1; white-space: nowrap; }
+    #new-toast .toast-view {
+      flex-shrink: 0;
+      padding: 6px 18px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      background: #fff;
+      color: #2c1b02;
+      transition: background .15s;
+    }
+    #new-toast .toast-view:hover { background: #f0ece8; }
+    #new-toast .toast-close {
+      background: none; border: none; cursor: pointer;
+      font-size: 16px; color: #b0956a; line-height: 1;
+      padding: 4px; transition: color .15s;
+    }
+    #new-toast .toast-close:hover { color: #fff; }
   </style>
 </head>
 <body>
@@ -522,6 +566,13 @@
 <div id="lightbox" class="hidden">
   <button id="lightbox-close">✕</button>
   <img id="lightbox-img" src="" alt="">
+</div>
+
+<div id="new-toast" class="hidden">
+  <span class="toast-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.6 4.6L18 9l-4.4 1.4L12 15l-1.6-4.6L6 9l4.4-1.4L12 3z"/><path d="M19 14l.8 2.2L22 17l-2.2.8L19 20l-.8-2.2L16 17l2.2-.8L19 14z"/></svg></span>
+  <span class="toast-text" id="new-toast-text"></span>
+  <button class="toast-view" id="new-toast-view">צפה</button>
+  <button class="toast-close" id="new-toast-close" title="סגור">✕</button>
 </div>
 
 <script>
@@ -597,6 +648,47 @@
     if (e.target === e.currentTarget) hide('updates-backdrop');
   });
 
+  // ── תוספים חדשים בחנות ──────────────────────────────────────────
+  const KNOWN_KEY = 'otzaria_store_known_plugins';
+
+  function checkNewPlugins() {
+    let known = null;
+    try { known = JSON.parse(localStorage.getItem(KNOWN_KEY)); } catch {}
+
+    const currentNames = allPlugins.map(p => p.name);
+    try { localStorage.setItem(KNOWN_KEY, JSON.stringify(currentNames)); } catch {}
+
+    // בטעינה הראשונה (אין נתון קודם) רק שומרים, בלי הודעה
+    if (!Array.isArray(known)) return;
+
+    const knownSet = new Set(known);
+    const newPlugins = allPlugins.filter(p => !knownSet.has(p.name));
+    if (newPlugins.length > 0) showNewToast(newPlugins);
+  }
+
+  function showNewToast(newPlugins) {
+    // תור התוספים החדשים שעוד לא נצפו
+    let pending = newPlugins.slice();
+
+    function update() {
+      if (pending.length === 0) { hide('new-toast'); return; }
+      document.getElementById('new-toast-text').textContent = pending.length === 1
+        ? 'תוסף חדש בחנות!'
+        : `${pending.length} תוספים חדשים בחנות!`;
+      show('new-toast');
+    }
+
+    document.getElementById('new-toast-view').onclick = () => {
+      const next = pending.shift();   // מסירים את הראשון מהתור
+      update();                       // ההודעה נשארת עם השאר שעוד לא נצפו
+      showDetail(next);
+    };
+
+    update();
+  }
+
+  document.getElementById('new-toast-close').onclick = () => hide('new-toast');
+
   // ── רענון ────────────────────────────────────────────────────────
   const refreshBtn = document.getElementById('refresh-btn');
   refreshBtn.addEventListener('click', () => {
@@ -626,6 +718,8 @@
       initTags();
       render();
       show('grid');
+      hide('new-toast');
+      checkNewPlugins();
       const updates = getAvailableUpdates();
       if (updates.length > 0) showUpdatesModal(updates);
     } catch (e) {
