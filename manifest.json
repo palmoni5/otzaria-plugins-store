@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "otzaria.plugins_directory",
   "name": "חנות תוספים",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "מציג את חנות התוספים הרשמי של אוצריא (otzaria.org/plugins) ישירות בתוך האפליקציה.",
   "author": "אוצריא",
   "homepage": "https://otzaria.org/plugins",
@@ -13,7 +13,9 @@
   "permissions": [
     "network.access",
     "plugin.storage.read",
-    "plugin.storage.write"
+    "plugin.storage.write",
+    "app.info.read",
+    "events.subscribe:theme.changed"
   ],
   "network": {
     "enabled": true,

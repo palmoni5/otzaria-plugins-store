@@ -5,20 +5,77 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>חנות תוספים</title>
   <style>
+    /* ── טוקני עיצוב (ערכים זהים למקור) ── */
+    :root {
+      --color-surface: #f7f3ee;
+      --color-surface-card: #fff;
+      --color-surface-soft: #faf7f3;
+      --color-surface-muted: #f0ece8;
+      --color-on-surface: #2c1b02;
+      --color-accent: #2c1b02;
+      --color-on-accent: #fff;
+      --color-primary-hover: #1a1000;
+      --color-text: #5a4020;
+      --color-text-muted: #7a6040;
+      --color-text-faint: #9a7a50;
+      --color-icon-faint: #b0956a;
+      --color-outline: #e8ddd0;
+      --color-outline-strong: #d9ccbe;
+      --color-divider: #ede4d8;
+      --color-placeholder: #f0e8dc;
+      --color-error: #8a3010;
+      --color-badge-stable-bg: #e8f0e0;
+      --color-badge-stable-fg: #3a6020;
+      --color-badge-beta-bg: #f0e8d0;
+      --color-badge-beta-fg: #7a5010;
+      --color-badge-exp-bg: #f5e8e0;
+      --color-shadow-card: rgba(44,27,2,.12);
+      --color-shadow-modal: rgba(44,27,2,.18);
+      --color-shadow-toast: rgba(44,27,2,.32);
+      --color-scrim: rgba(44,27,2,.4);
+      --color-scrim-dark: rgba(0,0,0,.85);
+      --color-overlay-light: rgba(255,255,255,.15);
+      --color-overlay-light-hover: rgba(255,255,255,.3);
+      --font-main: 'Segoe UI', Arial, sans-serif;
+      --fs-11: 11px; --fs-12: 12px; --fs-13: 13px; --fs-14: 14px;
+      --fs-15: 15px; --fs-16: 16px; --fs-18: 18px; --fs-22: 22px;
+      --fs-24: 24px; --fs-32: 32px; --fs-40: 40px; --fs-48: 48px;
+      --radius-3: 3px; --radius-6: 6px; --radius-8: 8px; --radius-10: 10px;
+      --radius-12: 12px; --radius-14: 14px; --radius-16: 16px; --radius-18: 18px;
+      --radius-20: 20px; --radius-24: 24px;
+      /* טקסט/אייקון מעל שכבה חוצצת כהה (lightbox) — תמיד בהיר, גם במצב כהה */
+      --color-on-scrim: #fff;
+    }
+
+    /* ── מצב כהה: רוב הצבעים מגיעים מ-theme של אוצריא (applyTheme).
+       כאן רק טוקנים שה-theme אינו מספק — צללים, שכבות חוצצות, ותגיות סטטוס. ── */
+    body.dark-mode {
+      --color-badge-stable-bg: #21311f;
+      --color-badge-stable-fg: #a3cf86;
+      --color-badge-beta-bg: #34301a;
+      --color-badge-beta-fg: #e0bd66;
+      --color-badge-exp-bg: #3a261c;
+      --color-shadow-card: rgba(0,0,0,.45);
+      --color-shadow-modal: rgba(0,0,0,.55);
+      --color-shadow-toast: rgba(0,0,0,.6);
+      --color-scrim: rgba(0,0,0,.6);
+      --color-scrim-dark: rgba(0,0,0,.88);
+    }
+
     html, body {   overflow-x: hidden; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      font-family: 'Segoe UI', Arial, sans-serif;
-      background: #f7f3ee;
-      color: #2c1b02;
+      font-family: var(--font-main);
+      background: var(--color-surface);
+      color: var(--color-on-surface);
       direction: rtl;
     }
 
     /* ── כותרת ── */
     header {
-      background: #fff;
-      border-bottom: 1px solid #e8ddd0;
+      background: var(--color-surface-card);
+      border-bottom: 1px solid var(--color-outline);
       padding: 12px 20px;
       display: flex;
       align-items: center;
@@ -27,29 +84,29 @@
       top: 0;
       z-index: 10;
     }
-    header h1 { font-size: 18px; font-weight: 700; color: #2c1b02; flex: 1; }
-    #plugin-count { font-size: 13px; color: #7a6040; }
+    header h1 { font-size: var(--fs-18); font-weight: 700; color: var(--color-on-surface); flex: 1; }
+    #plugin-count { font-size: var(--fs-13); color: var(--color-text-muted); }
 
     #refresh-btn {
       width: 32px; height: 32px;
       border-radius: 50%;
-      border: 1.5px solid #d9ccbe;
-      background: #faf7f3;
+      border: 1.5px solid var(--color-outline-strong);
+      background: var(--color-surface-soft);
       cursor: pointer;
       display: flex; align-items: center; justify-content: center;
-      font-size: 16px;
+      font-size: var(--fs-16);
       transition: background .15s, border-color .15s;
       flex-shrink: 0;
     }
-    #refresh-btn:hover { background: #f0ece8; border-color: #2c1b02; }
+    #refresh-btn:hover { background: var(--color-surface-muted); border-color: var(--color-on-surface); }
     #refresh-btn.spinning { animation: spin .7s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* ── פילטרים ── */
     #filters {
-      background: #fff;
+      background: var(--color-surface-card);
       padding: 12px 20px;
-      border-bottom: 1px solid #e8ddd0;
+      border-bottom: 1px solid var(--color-outline);
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
@@ -59,40 +116,59 @@
       flex: 1;
       min-width: 180px;
       padding: 8px 12px;
-      border: 1px solid #d9ccbe;
-      border-radius: 8px;
-      font-size: 14px;
-      background: #faf7f3;
+      border: 1px solid var(--color-outline-strong);
+      border-radius: var(--radius-8);
+      font-size: var(--fs-14);
+      background: var(--color-surface-soft);
+      color: var(--color-on-surface);
       outline: none;
       direction: rtl;
     }
-    #search:focus { border-color: #2c1b02; }
+    #search::placeholder { color: var(--color-text-faint); }
+    #search:focus { border-color: var(--color-on-surface); }
 
     #status-filter {
       padding: 8px 12px;
-      border: 1px solid #d9ccbe;
-      border-radius: 8px;
-      font-size: 14px;
-      background: #faf7f3;
+      border: 1px solid var(--color-outline-strong);
+      border-radius: var(--radius-8);
+      font-size: var(--fs-14);
+      background: var(--color-surface-soft);
+      color: var(--color-on-surface);
       outline: none;
       direction: rtl;
     }
 
     /* ── תגיות ── */
-    #tags { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 20px; background: #faf7f3; border-bottom: 1px solid #ede4d8; }
-    .tag-btn {
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 500;
+    #tags-wrap { background: var(--color-surface-soft); border-bottom: 1px solid var(--color-divider); }
+    #tags { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 20px 6px; }
+    #tags.collapsed { overflow: hidden; }
+    #tags-toggle {
+      display: block;
+      margin: 0 20px 10px;
+      padding: 4px 14px;
+      border-radius: var(--radius-20);
+      font-size: var(--fs-12);
+      font-weight: 600;
       cursor: pointer;
-      border: 1px solid #d9ccbe;
-      background: #fff;
-      color: #5a4020;
+      border: 1px dashed var(--color-outline-strong);
+      background: var(--color-surface-card);
+      color: var(--color-text);
       transition: all .15s;
     }
-    .tag-btn:hover { border-color: #2c1b02; color: #2c1b02; }
-    .tag-btn.active { background: #2c1b02; color: #fff; border-color: #2c1b02; }
+    #tags-toggle:hover { border-color: var(--color-on-surface); color: var(--color-on-surface); }
+    .tag-btn {
+      padding: 4px 12px;
+      border-radius: var(--radius-20);
+      font-size: var(--fs-12);
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid var(--color-outline-strong);
+      background: var(--color-surface-card);
+      color: var(--color-text);
+      transition: all .15s;
+    }
+    .tag-btn:hover { border-color: var(--color-on-surface); color: var(--color-on-surface); }
+    .tag-btn.active { background: var(--color-accent); color: var(--color-on-accent); border-color: var(--color-accent); }
 
     /* ── רשת כרטיסים ── */
     #grid {
@@ -103,32 +179,34 @@
     }
 
     .card {
-      background: #fff;
-      border-radius: 14px;
-      border: 1px solid #e8ddd0;
+      background: var(--color-surface-card);
+      border-radius: var(--radius-14);
+      border: 1px solid var(--color-outline);
       overflow: hidden;
       display: flex;
       flex-direction: column;
       transition: box-shadow .2s, transform .2s;
       cursor: pointer;
     }
-    .card:hover { box-shadow: 0 6px 24px rgba(44,27,2,.12); transform: translateY(-2px); }
+    .card:hover { box-shadow: 0 6px 24px var(--color-shadow-card); transform: translateY(-2px); }
 
     .card-img {
       width: 100%;
       aspect-ratio: 16/9;
       object-fit: cover;
-      background: #f0e8dc;
+      background: var(--color-placeholder);
     }
+    /* תמונת ברירת מחדל (לוגו) — לא חותכים, ממרכזים על רקע עדין */
+    .card-img.is-default { object-fit: contain; padding: 18px; background: var(--color-surface-soft); }
     .card-img-placeholder {
       width: 100%;
       aspect-ratio: 16/9;
-      background: linear-gradient(135deg, #f0e8dc, #e8ddd0);
+      background: linear-gradient(135deg, var(--color-placeholder), var(--color-outline));
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 32px;
-      color: #b0956a;
+      font-size: var(--fs-32);
+      color: var(--color-icon-faint);
     }
 
     .card-body { padding: 14px; flex: 1; display: flex; flex-direction: column; gap: 10px; }
@@ -136,34 +214,42 @@
     .card-badges { display: flex; gap: 6px; flex-wrap: wrap; }
     .badge {
       padding: 2px 10px;
-      border-radius: 20px;
-      font-size: 11px;
+      border-radius: var(--radius-20);
+      font-size: var(--fs-11);
       font-weight: 700;
     }
-    .badge-stable   { background: #e8f0e0; color: #3a6020; }
-    .badge-beta     { background: #f0e8d0; color: #7a5010; }
-    .badge-experimental { background: #f5e8e0; color: #8a3010; }
-    .badge-version  { background: #f0ece8; color: #5a4020; }
+    .badge-stable   { background: var(--color-badge-stable-bg); color: var(--color-badge-stable-fg); }
+    .badge-beta     { background: var(--color-badge-beta-bg); color: var(--color-badge-beta-fg); }
+    .badge-experimental { background: var(--color-badge-exp-bg); color: var(--color-error); }
+    .badge-version  { background: var(--color-surface-muted); color: var(--color-text); }
+    .badge-downloads {
+      background: var(--color-surface-muted);
+      color: var(--color-text-muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .badge-downloads svg { width: 12px; height: 12px; }
 
-    .card-title { font-size: 16px; font-weight: 700; color: #2c1b02; }
-    .card-desc  { font-size: 13px; color: #5a4020; line-height: 1.5; flex: 1;
-      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .card-title { font-size: var(--fs-16); font-weight: 700; color: var(--color-on-surface); }
+    .card-desc  { font-size: var(--fs-13); color: var(--color-text); line-height: 1.5; flex: 1;
+      display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 
     .card-tags { display: flex; flex-wrap: wrap; gap: 4px; }
     .card-tag {
       padding: 2px 8px;
-      border-radius: 20px;
-      font-size: 11px;
-      background: #f0ece8;
-      color: #7a6040;
+      border-radius: var(--radius-20);
+      font-size: var(--fs-11);
+      background: var(--color-surface-muted);
+      color: var(--color-text-muted);
     }
 
     .card-actions { display: flex; gap: 8px; }
     .btn {
       flex: 1;
       padding: 8px 12px;
-      border-radius: 20px;
-      font-size: 13px;
+      border-radius: var(--radius-20);
+      font-size: var(--fs-13);
       font-weight: 700;
       cursor: pointer;
       text-align: center;
@@ -171,10 +257,10 @@
       border: none;
       transition: all .15s;
     }
-    .btn-primary { background: #2c1b02; color: #fff; }
-    .btn-primary:hover { background: #1a1000; }
-    .btn-secondary { background: #fff; color: #2c1b02; border: 1.5px solid #d9ccbe; }
-    .btn-secondary:hover { background: #f7f3ee; border-color: #2c1b02; }
+    .btn-primary { background: var(--color-accent); color: var(--color-on-accent); }
+    .btn-primary:hover { background: var(--color-primary-hover); }
+    .btn-secondary { background: var(--color-surface-card); color: var(--color-on-surface); border: 1.5px solid var(--color-outline-strong); }
+    .btn-secondary:hover { background: var(--color-surface); border-color: var(--color-on-surface); }
 
     /* ── מצבים ── */
     #loading, #error, #empty {
@@ -184,20 +270,20 @@
     }
     .spinner {
       width: 36px; height: 36px;
-      border: 3px solid #e8ddd0;
-      border-top-color: #2c1b02;
+      border: 3px solid var(--color-outline);
+      border-top-color: var(--color-on-surface);
       border-radius: 50%;
       animation: spin .8s linear infinite;
     }
-    #error .icon { font-size: 40px; }
-    #error p { color: #8a3010; font-size: 14px; }
+    #error .icon { font-size: var(--fs-40); }
+    #error p { color: var(--color-error); font-size: var(--fs-14); }
     .hidden { display: none !important; }
 
     /* ── מודל עדכונים ── */
     #updates-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(44,27,2,.4);
+      background: var(--color-scrim);
       z-index: 50;
       display: flex;
       align-items: center;
@@ -205,77 +291,77 @@
       padding: 20px;
     }
     #updates-modal {
-      background: #fff;
-      border-radius: 18px;
-      border: 1px solid #e8ddd0;
+      background: var(--color-surface-card);
+      border-radius: var(--radius-18);
+      border: 1px solid var(--color-outline);
       width: 100%;
       max-width: 480px;
       max-height: 80vh;
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      box-shadow: 0 16px 48px rgba(44,27,2,.18);
+      box-shadow: 0 16px 48px var(--color-shadow-modal);
     }
     .modal-header {
       padding: 18px 20px 14px;
-      border-bottom: 1px solid #ede4d8;
+      border-bottom: 1px solid var(--color-divider);
       display: flex;
       align-items: center;
       gap: 10px;
     }
-    .modal-header-icon { font-size: 22px; }
-    .modal-header h2 { font-size: 16px; font-weight: 700; flex: 1; }
+    .modal-header-icon { font-size: var(--fs-22); }
+    .modal-header h2 { font-size: var(--fs-16); font-weight: 700; flex: 1; }
     .modal-close {
       background: none; border: none; cursor: pointer;
-      font-size: 18px; color: #9a7a50; line-height: 1;
-      padding: 4px; border-radius: 6px; transition: color .15s;
+      font-size: var(--fs-18); color: var(--color-text-faint); line-height: 1;
+      padding: 4px; border-radius: var(--radius-6); transition: color .15s;
     }
-    .modal-close:hover { color: #2c1b02; }
+    .modal-close:hover { color: var(--color-on-surface); }
     .modal-body {  flex: 1; padding: 12px 0; }
     .update-row {
       display: flex;
       align-items: center;
       gap: 12px;
       padding: 10px 20px;
-      border-bottom: 1px solid #f0ece8;
+      border-bottom: 1px solid var(--color-surface-muted);
     }
     .update-row:last-child { border-bottom: none; }
     .update-info { flex: 1; min-width: 0; }
-    .update-name { font-size: 14px; font-weight: 700; color: #2c1b02; }
-    .update-versions { font-size: 12px; color: #9a7a50; margin-top: 2px; }
+    .update-name { font-size: var(--fs-14); font-weight: 700; color: var(--color-on-surface); }
+    .update-versions { font-size: var(--fs-12); color: var(--color-text-faint); margin-top: 2px; }
     .update-btn {
       flex-shrink: 0;
       padding: 6px 16px;
-      border-radius: 20px;
-      font-size: 12px;
+      border-radius: var(--radius-20);
+      font-size: var(--fs-12);
       font-weight: 700;
       cursor: pointer;
       border: none;
-      background: #2c1b02;
-      color: #fff;
+      background: var(--color-accent);
+      color: var(--color-on-accent);
       transition: background .15s;
       white-space: nowrap;
     }
-    .update-btn:hover { background: #1a1000; }
+    .update-btn:hover { background: var(--color-primary-hover); }
     .update-btn:disabled { opacity: .6; cursor: default; }
     .modal-footer {
       padding: 14px 20px;
-      border-top: 1px solid #ede4d8;
+      border-top: 1px solid var(--color-divider);
       display: flex;
       justify-content: flex-end;
     }
     .update-all-btn {
       padding: 8px 20px;
-      border-radius: 20px;
-      font-size: 13px;
+      border-radius: var(--radius-20);
+      font-size: var(--fs-13);
       font-weight: 700;
       cursor: pointer;
       border: none;
-      background: #2c1b02;
-      color: #fff;
+      background: var(--color-accent);
+      color: var(--color-on-accent);
       transition: background .15s;
     }
-    .update-all-btn:hover { background: #1a1000; }
+    .update-all-btn:hover { background: var(--color-primary-hover); }
     .update-all-btn:disabled { opacity: .6; cursor: default; }
 
     /* ── דף פרטי תוסף ── */
@@ -292,20 +378,20 @@
       background: none;
       border: none;
       cursor: pointer;
-      color: #5a4020;
-      font-size: 14px;
+      color: var(--color-text);
+      font-size: var(--fs-14);
       font-weight: 600;
       padding: 6px 0;
       margin-bottom: 16px;
       transition: color .15s;
     }
-    .back-btn:hover { color: #2c1b02; }
-    .back-arrow { font-size: 18px; line-height: 1; }
+    .back-btn:hover { color: var(--color-on-surface); }
+    .back-arrow { font-size: var(--fs-18); line-height: 1; }
 
     .detail-header {
-      background: #fff;
-      border-radius: 16px;
-      border: 1px solid #e8ddd0;
+      background: var(--color-surface-card);
+      border-radius: var(--radius-16);
+      border: 1px solid var(--color-outline);
       padding: 24px;
       margin-bottom: 16px;
       display: grid;
@@ -321,38 +407,39 @@
       width: 100%;
       aspect-ratio: 4/3;
       object-fit: cover;
-      border-radius: 12px;
-      background: #f0e8dc;
+      border-radius: var(--radius-12);
+      background: var(--color-placeholder);
     }
+    .detail-main-img.is-default { object-fit: contain; padding: 24px; background: var(--color-surface-soft); }
     .detail-main-img-placeholder {
       width: 100%;
       aspect-ratio: 4/3;
-      background: linear-gradient(135deg, #f0e8dc, #e8ddd0);
-      border-radius: 12px;
+      background: linear-gradient(135deg, var(--color-placeholder), var(--color-outline));
+      border-radius: var(--radius-12);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 48px;
-      color: #b0956a;
+      font-size: var(--fs-48);
+      color: var(--color-icon-faint);
     }
 
     .detail-info { display: flex; flex-direction: column; gap: 12px; }
-    .detail-name { font-size: 24px; font-weight: 800; color: #2c1b02; line-height: 1.3; }
-    .detail-desc { font-size: 14px; color: #5a4020; line-height: 1.7; white-space: pre-wrap; }
+    .detail-name { font-size: var(--fs-24); font-weight: 800; color: var(--color-on-surface); line-height: 1.3; }
+    .detail-desc { font-size: var(--fs-14); color: var(--color-text); line-height: 1.7; white-space: pre-wrap; }
     .detail-badges { display: flex; gap: 8px; flex-wrap: wrap; }
     .detail-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
     .detail-install-btn {
       padding: 10px 24px;
-      border-radius: 24px;
-      font-size: 14px;
+      border-radius: var(--radius-24);
+      font-size: var(--fs-14);
       font-weight: 700;
       cursor: pointer;
       border: none;
-      background: #2c1b02;
-      color: #fff;
+      background: var(--color-accent);
+      color: var(--color-on-accent);
       transition: background .15s;
     }
-    .detail-install-btn:hover { background: #1a1000; }
+    .detail-install-btn:hover { background: var(--color-primary-hover); }
     .detail-install-btn:disabled { opacity: .6; cursor: default; }
 
     .detail-grid {
@@ -364,57 +451,57 @@
     @media (max-width: 500px) { .detail-grid { grid-template-columns: 1fr; } }
 
     .detail-card {
-      background: #fff;
-      border-radius: 14px;
-      border: 1px solid #e8ddd0;
+      background: var(--color-surface-card);
+      border-radius: var(--radius-14);
+      border: 1px solid var(--color-outline);
       padding: 18px;
     }
     .detail-card h2 {
-      font-size: 15px;
+      font-size: var(--fs-15);
       font-weight: 700;
-      color: #2c1b02;
+      color: var(--color-on-surface);
       margin-bottom: 14px;
       display: flex;
       align-items: center;
       gap: 6px;
     }
-    .detail-card h2 .icon { font-size: 18px; }
+    .detail-card h2 .icon { font-size: var(--fs-18); }
 
     .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .info-cell {
-      background: #faf7f3;
-      border-radius: 10px;
+      background: var(--color-surface-soft);
+      border-radius: var(--radius-10);
       padding: 10px 12px;
     }
     .info-cell.full { grid-column: 1 / -1; }
-    .info-label { font-size: 11px; color: #9a7a50; margin-bottom: 3px; }
-    .info-value { font-size: 13px; font-weight: 700; color: #2c1b02; }
+    .info-label { font-size: var(--fs-11); color: var(--color-text-faint); margin-bottom: 3px; }
+    .info-value { font-size: var(--fs-13); font-weight: 700; color: var(--color-on-surface); }
 
     .detail-tags { display: flex; flex-wrap: wrap; gap: 8px; }
     .detail-tag {
       padding: 4px 14px;
-      border-radius: 20px;
-      font-size: 12px;
+      border-radius: var(--radius-20);
+      font-size: var(--fs-12);
       font-weight: 500;
-      background: #f0ece8;
-      color: #7a6040;
+      background: var(--color-surface-muted);
+      color: var(--color-text-muted);
       cursor: pointer;
       border: 1px solid transparent;
       transition: all .15s;
     }
-    .detail-tag:hover { border-color: #2c1b02; color: #2c1b02; }
+    .detail-tag:hover { border-color: var(--color-on-surface); color: var(--color-on-surface); }
 
     .screenshots-section {
-      background: #fff;
-      border-radius: 14px;
-      border: 1px solid #e8ddd0;
+      background: var(--color-surface-card);
+      border-radius: var(--radius-14);
+      border: 1px solid var(--color-outline);
       padding: 18px;
       margin-bottom: 16px;
     }
     .screenshots-section h2 {
-      font-size: 15px;
+      font-size: var(--fs-15);
       font-weight: 700;
-      color: #2c1b02;
+      color: var(--color-on-surface);
       margin-bottom: 14px;
       display: flex;
       align-items: center;
@@ -428,14 +515,14 @@
       scroll-snap-type: x mandatory;
     }
     .screenshots-row::-webkit-scrollbar { height: 6px; }
-    .screenshots-row::-webkit-scrollbar-thumb { background: #d9ccbe; border-radius: 3px; }
+    .screenshots-row::-webkit-scrollbar-thumb { background: var(--color-outline-strong); border-radius: var(--radius-3); }
     .screenshot-thumb {
       flex-shrink: 0;
       width: 220px;
       aspect-ratio: 16/9;
       object-fit: cover;
-      border-radius: 10px;
-      border: 1px solid #e8ddd0;
+      border-radius: var(--radius-10);
+      border: 1px solid var(--color-outline);
       cursor: pointer;
       scroll-snap-align: start;
       transition: transform .15s;
@@ -446,7 +533,7 @@
     #lightbox {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,.85);
+      background: var(--color-scrim-dark);
       z-index: 100;
       display: flex;
       align-items: center;
@@ -456,17 +543,17 @@
     #lightbox img {
       max-width: 100%;
       max-height: 90vh;
-      border-radius: 10px;
+      border-radius: var(--radius-10);
       object-fit: contain;
     }
     #lightbox-close {
       position: absolute;
       top: 16px;
       left: 16px;
-      background: rgba(255,255,255,.15);
+      background: var(--color-overlay-light);
       border: none;
-      color: #fff;
-      font-size: 24px;
+      color: var(--color-on-scrim);
+      font-size: var(--fs-24);
       width: 40px; height: 40px;
       border-radius: 50%;
       cursor: pointer;
@@ -475,7 +562,7 @@
       justify-content: center;
       transition: background .15s;
     }
-    #lightbox-close:hover { background: rgba(255,255,255,.3); }
+    #lightbox-close:hover { background: var(--color-overlay-light-hover); }
 
     /* ── הודעת תוסף חדש ── */
     #new-toast {
@@ -483,14 +570,14 @@
       bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      background: #2c1b02;
-      color: #fff;
-      border-radius: 14px;
+      background: var(--color-accent);
+      color: var(--color-on-accent);
+      border-radius: var(--radius-14);
       padding: 12px 14px 12px 18px;
       display: flex;
       align-items: center;
       gap: 12px;
-      box-shadow: 0 8px 32px rgba(44,27,2,.32);
+      box-shadow: 0 8px 32px var(--color-shadow-toast);
       z-index: 80;
       max-width: calc(100% - 40px);
       animation: toast-in .3s ease;
@@ -500,26 +587,26 @@
       to   { opacity: 1; transform: translate(-50%, 0); }
     }
     #new-toast .toast-icon { display: flex; flex-shrink: 0; }
-    #new-toast .toast-text { font-size: 14px; font-weight: 700; flex: 1; white-space: nowrap; }
+    #new-toast .toast-text { font-size: var(--fs-14); font-weight: 700; flex: 1; white-space: nowrap; }
     #new-toast .toast-view {
       flex-shrink: 0;
       padding: 6px 18px;
-      border-radius: 20px;
-      font-size: 13px;
+      border-radius: var(--radius-20);
+      font-size: var(--fs-13);
       font-weight: 700;
       cursor: pointer;
       border: none;
-      background: #fff;
-      color: #2c1b02;
+      background: var(--color-surface-card);
+      color: var(--color-on-surface);
       transition: background .15s;
     }
-    #new-toast .toast-view:hover { background: #f0ece8; }
+    #new-toast .toast-view:hover { background: var(--color-surface-muted); }
     #new-toast .toast-close {
       background: none; border: none; cursor: pointer;
-      font-size: 16px; color: #b0956a; line-height: 1;
+      font-size: var(--fs-16); color: var(--color-icon-faint); line-height: 1;
       padding: 4px; transition: color .15s;
     }
-    #new-toast .toast-close:hover { color: #fff; }
+    #new-toast .toast-close:hover { color: var(--color-on-accent); }
   </style>
 </head>
 <body>
@@ -540,7 +627,10 @@
   </select>
 </div>
 
-<div id="tags" class="hidden"></div>
+<div id="tags-wrap" class="hidden">
+  <div id="tags"></div>
+  <button id="tags-toggle" class="hidden"></button>
+</div>
 
 <div id="loading"><div class="spinner"></div><p>טוען תוספים...</p></div>
 <div id="error" class="hidden"><span class="icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#8a3010" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span><p id="error-msg"></p></div>
@@ -578,6 +668,9 @@
 <script>
   const API = 'https://otzaria.org/api/plugins';
   const BASE = 'https://otzaria.org';
+  // תמונת ברירת מחדל לתוסף ללא תמונה. נטענת ישירות מ-otzaria.org (כבר ב-allowlist),
+  // לא נארזת בחבילה — הקובץ ~2MB והחנות ממילא דורשת רשת.
+  const DEFAULT_IMG = BASE + '/logo.svg';
 
   let allPlugins = [];
   let installedPlugins = [];   // [{ name, version }]
@@ -649,20 +742,25 @@
   });
 
   // ── תוספים חדשים בחנות ──────────────────────────────────────────
-  const KNOWN_KEY = 'otzaria_store_known_plugins';
+  // מפתח v2: הזהות נשמרת לפי id היציב (ולא לפי השם שעלול להשתנות).
+  // החלפת המפתח מהגרסה הישנה (שמות) גורמת לטעינה הראשונה רק לשמור, בלי הודעה.
+  const KNOWN_KEY = 'otzaria_store_known_plugins_v2';
 
   function checkNewPlugins() {
     let known = null;
     try { known = JSON.parse(localStorage.getItem(KNOWN_KEY)); } catch {}
 
-    const currentNames = allPlugins.map(p => p.name);
-    try { localStorage.setItem(KNOWN_KEY, JSON.stringify(currentNames)); } catch {}
+    const currentIds = allPlugins.map(p => p.id);
+    try { localStorage.setItem(KNOWN_KEY, JSON.stringify(currentIds)); } catch {}
 
     // בטעינה הראשונה (אין נתון קודם) רק שומרים, בלי הודעה
     if (!Array.isArray(known)) return;
 
     const knownSet = new Set(known);
-    const newPlugins = allPlugins.filter(p => !knownSet.has(p.name));
+    // תוסף שכבר מותקן אצל המשתמש אינו "חדש בחנות", גם אם נכנס לקטלוג עכשיו
+    const installedNames = new Set(installedPlugins.map(p => p.name));
+    const newPlugins = allPlugins.filter(p =>
+      !knownSet.has(p.id) && !installedNames.has(p.name));
     if (newPlugins.length > 0) showNewToast(newPlugins);
   }
 
@@ -730,9 +828,71 @@
     refreshBtn.classList.remove('spinning');
   }
 
+  // ── ערכת צבעים: מושכים כמה שיותר צבעים מ-theme האמיתי של אוצריא ──────
+  //    (רקע, טקסט, מסגרות, הדגשה, שגיאה). הפלטה החמה ב-:root היא רק ברירת
+  //    מחדל אם theme לא נמסר. צבעי סטטוס/צללים נשארים מקומיים (אין להם תפקיד
+  //    מתאים ב-Material של אוצריא) — ראה body.dark-mode.
+  function darken(hex, amt) {
+    const m = /^#?([0-9a-fA-F]{6})$/.exec(hex && hex.trim());
+    if (!m) return hex;
+    const n = parseInt(m[1], 16);
+    const r = Math.round(((n >> 16) & 255) * (1 - amt));
+    const g = Math.round(((n >> 8) & 255) * (1 - amt));
+    const b = Math.round((n & 255) * (1 - amt));
+    return '#' + (1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1);
+  }
+
+  function applyTheme(theme) {
+    if (!theme) return;
+    document.body.classList.toggle('dark-mode', theme.mode === 'dark');
+    const cs = theme.colorScheme;
+    if (!cs) return;
+    const root = document.documentElement;
+    const set = (k, v) => { if (v) root.style.setProperty(k, v); };
+
+    const high = cs.surfaceContainerHigh || cs.surface;            // שכבת רקע עדינה
+    const onVar = cs.onSurfaceVariant || cs.onSurface;             // טקסט משני
+    const outlineSoft = cs.outlineVariant || cs.outline;          // מסגרת עדינה
+
+    // רקעים
+    set('--color-surface', high);                                 // רקע כללי של הדף
+    set('--color-surface-card', cs.surface);                      // כרטיסים/כותרת/חלוניות
+    set('--color-surface-soft', high);                            // שדות קלט, סרגל תגיות
+    set('--color-surface-muted', cs.surfaceContainerHighest);     // צ'יפים, badge גרסה
+    set('--color-placeholder', cs.surfaceContainerHighest);       // רקע placeholder לתמונה
+    // טקסט
+    set('--color-on-surface', cs.onSurface);
+    set('--color-text', onVar);
+    set('--color-text-muted', onVar);
+    set('--color-text-faint', onVar);
+    set('--color-icon-faint', onVar);
+    // מסגרות ומפרידים
+    set('--color-outline', outlineSoft);
+    set('--color-outline-strong', cs.outline);
+    set('--color-divider', outlineSoft);
+    // שגיאה
+    set('--color-error', cs.error);
+    // הדגשה — כפתורים ראשיים, תגית פעילה, טוסט
+    set('--color-accent', cs.primary);
+    set('--color-on-accent', cs.onPrimary);
+    set('--color-primary-hover', darken(cs.primary, 0.12));
+  }
+
+  // ה-theme מגיע כבר ב-plugin.boot (ללא הרשאה); נתפוס אותו מוקדם ככל האפשר.
+  try {
+    Otzaria.on('plugin.boot', p => { if (p && p.theme) applyTheme(p.theme); });
+    // עדכון חי כשהמשתמש מחליף ערכת צבעים/מצב כהה (הרשאה: events.subscribe:theme.changed)
+    Otzaria.on('theme.changed', applyTheme);
+  } catch {}
+
   // ── טעינה ראשונית ────────────────────────────────────────────────
   async function loadPlugins() {
     await new Promise(resolve => window.addEventListener('plugin.ready', resolve, { once: true }));
+    // קריאה מפורשת כדי לוודא את המצב הנוכחי גם אם plugin.boot כבר חלף
+    try {
+      const res = await Otzaria.call('app.getTheme', {});
+      if (res && res.success) applyTheme(res.data);
+    } catch {}
     await reload();
   }
 
@@ -746,8 +906,55 @@
     container.innerHTML = '';
     container.appendChild(makeTag('כל התגיות', 'all', true));
     sorted.forEach(t => container.appendChild(makeTag(t, t, false)));
-    container.classList.remove('hidden');
+    document.getElementById('tags-wrap').classList.remove('hidden');
+    tagsExpanded = false;
+    updateTagsToggle();
   }
+
+  // הגבלת אזור התגיות ל-3 שורות עם לחצן "הצג עוד"
+  let tagsExpanded = false;
+
+  function updateTagsToggle() {
+    const tags = document.getElementById('tags');
+    const toggle = document.getElementById('tags-toggle');
+    if (!tags.children.length || !tags.offsetParent) {
+      toggle.classList.add('hidden');
+      return;
+    }
+
+    const rowH = tags.children[0].offsetHeight;
+    const gap = 6;
+    const collapsedMax = rowH * 3 + gap * 2;
+
+    if (tags.scrollHeight <= collapsedMax + 1) {
+      toggle.classList.add('hidden');
+      tags.classList.remove('collapsed');
+      tags.style.maxHeight = '';
+      return;
+    }
+
+    toggle.classList.remove('hidden');
+    if (tagsExpanded) {
+      tags.classList.remove('collapsed');
+      tags.style.maxHeight = '';
+      toggle.textContent = 'הצג פחות';
+    } else {
+      tags.classList.add('collapsed');
+      tags.style.maxHeight = collapsedMax + 'px';
+      toggle.textContent = 'הצג עוד';
+    }
+  }
+
+  document.getElementById('tags-toggle').addEventListener('click', () => {
+    tagsExpanded = !tagsExpanded;
+    updateTagsToggle();
+  });
+
+  let tagsResizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(tagsResizeTimer);
+    tagsResizeTimer = setTimeout(updateTagsToggle, 150);
+  });
 
   function makeTag(label, value, active) {
     const btn = document.createElement('button');
@@ -796,16 +1003,16 @@
     art.className = 'card';
 
     const downloadUrl = p.downloadUrl.startsWith('http') ? p.downloadUrl : BASE + p.downloadUrl;
-    const imgUrl = p.image ? (p.image.startsWith('http') ? p.image : BASE + p.image) : null;
+    const hasImg = !!p.image;
+    const imgUrl = hasImg ? (p.image.startsWith('http') ? p.image : BASE + p.image) : DEFAULT_IMG;
 
     art.innerHTML = `
-      ${imgUrl
-        ? `<img class="card-img" src="${imgUrl}" alt="${p.name}" loading="lazy">`
-        : `<div class="card-img-placeholder"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#b0956a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>`}
+      <img class="card-img${hasImg ? '' : ' is-default'}" src="${esc(imgUrl)}" alt="${esc(p.name)}" loading="lazy">
       <div class="card-body">
         <div class="card-badges">
           <span class="badge ${statusClass[p.status] || ''}">${statusLabel[p.status] || p.status}</span>
           <span class="badge badge-version">גרסה ${esc(p.version)}</span>
+          ${downloadsBadge(p)}
         </div>
         <div class="card-title">${esc(p.name)}</div>
         <div class="card-desc">${esc(p.shortDescription || '')}</div>
@@ -827,7 +1034,7 @@
 
   // ── דף פרטים ────────────────────────────────────────────────────
   function showDetailPage() {
-    hide('filters'); hide('tags'); hide('grid'); hide('empty'); hide('loading'); hide('error');
+    hide('filters'); hide('tags-wrap'); hide('grid'); hide('empty'); hide('loading'); hide('error');
     document.getElementById('plugin-count').textContent = '';
     show('detail-page');
   }
@@ -835,7 +1042,8 @@
   function showListPage() {
     hide('detail-page');
     show('filters');
-    document.getElementById('tags').classList.remove('hidden');
+    document.getElementById('tags-wrap').classList.remove('hidden');
+    updateTagsToggle();
     render();
   }
 
@@ -843,21 +1051,21 @@
     showDetailPage();
 
     const downloadUrl = p.downloadUrl.startsWith('http') ? p.downloadUrl : BASE + p.downloadUrl;
-    const imgUrl = p.image ? (p.image.startsWith('http') ? p.image : BASE + p.image) : null;
+    const hasImg = !!p.image;
+    const imgUrl = hasImg ? (p.image.startsWith('http') ? p.image : BASE + p.image) : DEFAULT_IMG;
     const screenshots = (p.screenshots || []).map(s => s.startsWith('http') ? s : BASE + s);
 
     const detail = document.getElementById('detail-page');
     detail.innerHTML = `
       <button class="back-btn" id="back-btn"><span class="back-arrow">→</span> חזרה לחנות</button>
       <div class="detail-header">
-        ${imgUrl
-          ? `<img class="detail-main-img" src="${esc(imgUrl)}" alt="${esc(p.name)}" loading="lazy">`
-          : `<div class="detail-main-img-placeholder"><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#b0956a" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>`}
+        <img class="detail-main-img${hasImg ? '' : ' is-default'}" src="${esc(imgUrl)}" alt="${esc(p.name)}" loading="lazy">
         <div class="detail-info">
           <div class="detail-name">${esc(p.name)}</div>
           <div class="detail-badges">
             <span class="badge ${statusClass[p.status] || ''}">${statusLabel[p.status] || esc(p.status)}</span>
             <span class="badge badge-version">גרסה ${esc(p.version)}</span>
+            ${downloadsBadge(p)}
           </div>
           <div class="detail-desc">${esc(p.description || p.shortDescription || '')}</div>
           <div class="detail-actions">
@@ -876,6 +1084,10 @@
             <div class="info-cell">
               <div class="info-label">סטטוס</div>
               <div class="info-value">${statusLabel[p.status] || esc(p.status)}</div>
+            </div>
+            <div class="info-cell">
+              <div class="info-label">הורדות</div>
+              <div class="info-value">${fmtNum(p.downloadCount)}</div>
             </div>
             ${p.author ? `
             <div class="info-cell">
@@ -949,6 +1161,18 @@
   }
 
   // ── כלים ─────────────────────────────────────────────────────────
+  // אייקון הורדה (feather download)
+  const DOWNLOAD_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+
+  function fmtNum(n) {
+    return (Number(n) || 0).toLocaleString('he-IL');
+  }
+
+  // תגית כמות הורדות. מוצגת תמיד (גם 0), כדי לשמור על מראה אחיד עם האתר.
+  function downloadsBadge(p) {
+    return `<span class="badge badge-downloads" title="כמות הורדות">${DOWNLOAD_ICON}${fmtNum(p.downloadCount)} הורדות</span>`;
+  }
+
   function esc(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
