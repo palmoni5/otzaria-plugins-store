@@ -192,15 +192,14 @@
 
     .card-img {
       width: 100%;
-      aspect-ratio: 16/9;
+      aspect-ratio: 16/11;
       object-fit: cover;
-      background: var(--color-placeholder);
+      background: var(--color-surface-card);
     }
-    /* תמונת ברירת מחדל (לוגו) — לא חותכים, ממרכזים על רקע עדין */
-    .card-img.is-default { object-fit: contain; padding: 18px; background: var(--color-surface-soft); }
+    .card-img.is-default { object-fit: contain; padding: 16px; }
     .card-img-placeholder {
       width: 100%;
-      aspect-ratio: 16/9;
+      aspect-ratio: 16/11;
       background: linear-gradient(135deg, var(--color-placeholder), var(--color-outline));
       display: flex;
       align-items: center;
@@ -408,9 +407,9 @@
       aspect-ratio: 4/3;
       object-fit: cover;
       border-radius: var(--radius-12);
-      background: var(--color-placeholder);
+      background: var(--color-surface-card);
     }
-    .detail-main-img.is-default { object-fit: contain; padding: 24px; background: var(--color-surface-soft); }
+    .detail-main-img.is-default { object-fit: contain; padding: 24px; }
     .detail-main-img-placeholder {
       width: 100%;
       aspect-ratio: 4/3;
@@ -519,7 +518,7 @@
     .screenshot-thumb {
       flex-shrink: 0;
       width: 220px;
-      aspect-ratio: 16/9;
+      aspect-ratio: 16/11;
       object-fit: cover;
       border-radius: var(--radius-10);
       border: 1px solid var(--color-outline);
