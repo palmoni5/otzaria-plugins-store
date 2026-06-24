@@ -673,8 +673,9 @@
 
   let allPlugins = [];
   let installedPlugins = [];   // [{ name, version }]
-  let installedKeys = new Set();
+  let installedVersionByName = new Map();   // שם → גרסה מותקנת
   let activeTag = 'all';
+  let appVersion = null;       // גרסת אוצריא המותקנת, לסינון תאימות
 
   const statusLabel = { stable: 'יציב', beta: 'בטא', experimental: 'ניסיוני' };
   const statusClass = { stable: 'badge-stable', beta: 'badge-beta', experimental: 'badge-experimental' };
@@ -690,6 +691,15 @@
       if (d !== 0) return d > 0 ? 1 : -1;
     }
     return 0;
+  }
+
+  // תוסף תואם רק אם גרסת אוצריא המותקנת בטווח [compatibleWith, maxAppVersion].
+  // כשהגרסה אינה ידועה (כשל ב-app.getInfo) — לא מסתירים דבר.
+  function isCompatible(p) {
+    if (!appVersion) return true;
+    if (p.compatibleWith && compareVersions(appVersion, p.compatibleWith) < 0) return false;
+    if (p.maxAppVersion && compareVersions(appVersion, p.maxAppVersion) > 0) return false;
+    return true;
   }
 
   function getAvailableUpdates() {
@@ -812,7 +822,7 @@
     show('loading');
     allPlugins = [];
     installedPlugins = [];
-    installedKeys = new Set();
+    installedVersionByName = new Map();
     try {
       const [fetchRes, installedRes] = await Promise.all([
         Otzaria.call('network.fetch', { url: API }),
@@ -821,9 +831,12 @@
       if (!fetchRes.success) throw new Error(fetchRes.error?.message || 'שגיאת רשת');
       if (fetchRes.data.status !== 200) throw new Error(`HTTP ${fetchRes.data.status}`);
       allPlugins = JSON.parse(fetchRes.data.body);
+      // סינון תאימות במקור — מסתיר תוספים לא תואמים מהחנות, ממודל העדכונים
+      // ומהודעת "תוסף חדש" כאחד (כולל עדכון לגרסה שכבר אינה תואמת).
+      allPlugins = allPlugins.filter(isCompatible);
       if (installedRes.success) {
         installedPlugins = installedRes.data;
-        installedPlugins.forEach(p => installedKeys.add(`${p.name}@${p.version}`));
+        installedPlugins.forEach(p => installedVersionByName.set(p.name, p.version));
       }
       initTags();
       render();
@@ -904,6 +917,11 @@
     try {
       const res = await Otzaria.call('app.getTheme', {});
       if (res && res.success) applyTheme(res.data);
+    } catch {}
+    // גרסת אוצריא קבועה לאורך הריצה — מספיק למשוך פעם אחת לפני הטעינה
+    try {
+      const info = await Otzaria.call('app.getInfo', {});
+      if (info && info.success) appVersion = info.data.version;
     } catch {}
     await reload();
   }
@@ -987,7 +1005,12 @@
     const q = document.getElementById('search').value.toLowerCase();
     const status = document.getElementById('status-filter').value;
 
-    const list = allPlugins.filter(p => !installedKeys.has(`${p.name}@${p.version}`)).filter(p => {
+    const list = allPlugins.filter(p => {
+      // תוסף מותקן יוצג רק אם בחנות יש גרסה חדשה ממנו (עדכון). גרסה זהה או
+      // ישנה יותר — מסתירים. תוסף שאינו מותקן — מוצג תמיד.
+      const inst = installedVersionByName.get(p.name);
+      return inst === undefined || compareVersions(p.version, inst) > 0;
+    }).filter(p => {
       if (status !== 'all' && p.status !== status) return false;
       if (activeTag !== 'all' && !(p.tags || []).includes(activeTag)) return false;
       if (q) {
