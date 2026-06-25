@@ -165,7 +165,7 @@
       border: 1px solid var(--color-outline-strong);
       background: var(--color-surface-card);
       color: var(--color-text);
-      transition: all .15s;
+      transition: background-color .15s, color .15s, border-color .15s;
     }
     .tag-btn:hover { border-color: var(--color-on-surface); color: var(--color-on-surface); }
     .tag-btn.active { background: var(--color-accent); color: var(--color-on-accent); border-color: var(--color-accent); }
@@ -693,13 +693,64 @@
     return 0;
   }
 
-  // תוסף תואם רק אם גרסת אוצריא המותקנת בטווח [compatibleWith, maxAppVersion].
-  // כשהגרסה אינה ידועה (כשל ב-app.getInfo) — לא מסתירים דבר.
-  function isCompatible(p) {
-    if (!appVersion) return true;
-    if (p.compatibleWith && compareVersions(appVersion, p.compatibleWith) < 0) return false;
-    if (p.maxAppVersion && compareVersions(appVersion, p.maxAppVersion) > 0) return false;
+  // ── בחירת הגרסה התואמת ─────────────────────────────────────────────
+  // גרסה (חיה או היסטורית) תואמת רק אם גרסת אוצריא בטווח [compatibleWith, maxAppVersion].
+  // כשגרסת אוצריא אינה ידועה (כשל ב-app.getInfo) — לא מסתירים דבר.
+  function isVersionCompatible(v, appVer) {
+    if (!appVer) return true;
+    if (v.compatibleWith && compareVersions(appVer, v.compatibleWith) < 0) return false;
+    if (v.maxAppVersion && compareVersions(appVer, v.maxAppVersion) > 0) return false;
     return true;
+  }
+
+  // כל הגרסאות הזמינות לתוסף. ב-API החדש מגיע שדה versions (החיה + ההיסטוריה);
+  // אם הוא חסר (API ישן) נופלים חזרה לגרסה החיה היחידה מהשדות העליונים.
+  function pluginVersionCandidates(p) {
+    if (Array.isArray(p.versions) && p.versions.length) return p.versions;
+    return [{
+      version: p.version,
+      status: p.status,
+      compatibleWith: p.compatibleWith,
+      maxAppVersion: p.maxAppVersion,
+      requiresNetwork: p.requiresNetwork,
+      downloadUrl: p.downloadUrl,
+      isLatest: true,
+    }];
+  }
+
+  // הגרסה הגבוהה ביותר התואמת לגרסת אוצריא — null אם אין אף גרסה תואמת.
+  function selectBestVersion(p, appVer) {
+    return pluginVersionCandidates(p)
+      .filter(v => isVersionCompatible(v, appVer))
+      .sort((a, b) => compareVersions(b.version, a.version))[0] || null;
+  }
+
+  // הגרסה הגבוהה ביותר בכלל (ללא תלות בתאימות) — לזיהוי "קיימת גרסה חדשה יותר".
+  function latestVersionOf(p) {
+    return pluginVersionCandidates(p)
+      .slice()
+      .sort((a, b) => compareVersions(b.version, a.version))[0] || null;
+  }
+
+  // ממפה תוסף מהקטלוג ל"תוסף אפקטיבי" שגרסתו וקישור-ההורדה שלו הם הגרסה התואמת
+  // הגבוהה ביותר (לא בהכרח האחרונה). מחזיר null אם אין אף גרסה תואמת — אז התוסף
+  // לא יוצג ולא ייחשב לעדכון.
+  function toEffectivePlugin(p) {
+    const best = selectBestVersion(p, appVersion);
+    if (!best) return null;
+    const latest = latestVersionOf(p);
+    return {
+      ...p,
+      version: best.version,
+      status: best.status || p.status,
+      compatibleWith: best.compatibleWith,
+      maxAppVersion: best.maxAppVersion,
+      requiresNetwork: best.requiresNetwork ?? p.requiresNetwork,
+      downloadUrl: best.downloadUrl || p.downloadUrl,
+      // קיימת גרסה חדשה יותר שאינה תואמת לגרסת אוצריא הנוכחית של המשתמש
+      newerIncompatibleVersion: latest && compareVersions(latest.version, best.version) > 0
+        ? latest.version : null,
+    };
   }
 
   function getAvailableUpdates() {
@@ -830,10 +881,11 @@
       ]);
       if (!fetchRes.success) throw new Error(fetchRes.error?.message || 'שגיאת רשת');
       if (fetchRes.data.status !== 200) throw new Error(`HTTP ${fetchRes.data.status}`);
-      allPlugins = JSON.parse(fetchRes.data.body);
-      // סינון תאימות במקור — מסתיר תוספים לא תואמים מהחנות, ממודל העדכונים
-      // ומהודעת "תוסף חדש" כאחד (כולל עדכון לגרסה שכבר אינה תואמת).
-      allPlugins = allPlugins.filter(isCompatible);
+      const rawCatalog = JSON.parse(fetchRes.data.body);
+      // לכל תוסף בוחרים את הגרסה הגבוהה ביותר התואמת לגרסת אוצריא של המשתמש
+      // (לא בהכרח האחרונה). תוסף שאין לו אף גרסה תואמת — מוסר מהרשימה. כך
+      // המשתמש רואה ומתעדכן לגרסה התומכת גם אם הגרסה האחרונה אינה תואמת אצלו.
+      allPlugins = rawCatalog.map(toEffectivePlugin).filter(Boolean);
       if (installedRes.success) {
         installedPlugins = installedRes.data;
         installedPlugins.forEach(p => installedVersionByName.set(p.name, p.version));
@@ -1143,6 +1195,11 @@
               <div class="info-label">חיבור אינטרנט</div>
               <div class="info-value">${p.requiresNetwork ? 'נדרש' : '✓ לא נדרש'}</div>
             </div>
+            ${p.newerIncompatibleVersion ? `
+            <div class="info-cell full">
+              <div class="info-label">שים לב</div>
+              <div class="info-value">מוצגת הגרסה התואמת לגרסת אוצריא שלך. קיימת גרסה חדשה יותר (${esc(p.newerIncompatibleVersion)}) הדורשת גרסת אוצריא מתקדמת יותר.</div>
+            </div>` : ''}
           </div>
         </div>
         <div class="detail-card">

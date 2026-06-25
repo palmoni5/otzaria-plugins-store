@@ -2,19 +2,21 @@
   "schemaVersion": 1,
   "id": "otzaria.plugins_directory",
   "name": "חנות תוספים",
-  "version": "1.7.0",
+  "version": "2.0.0",
   "description": "מציג את חנות התוספים הרשמי של אוצריא (otzaria.org/plugins) ישירות בתוך האפליקציה.",
   "author": "אוצריא",
   "homepage": "https://otzaria.org/plugins",
   "entrypoint": "index.html",
   "stability": "stable",
-  "minAppVersion": "0.9.92",
+  "minAppVersion": "0.9.95",
   "sdkVersion": "1.x",
   "permissions": [
     "network.access",
     "plugin.storage.read",
     "plugin.storage.write",
     "app.info.read",
+    "app.run_on_startup",
+    "notifications.send",
     "events.subscribe:theme.changed"
   ],
   "network": {
@@ -29,6 +31,9 @@
       "order": 950,
       "defaultPinned": true,
       "iconName": "store_microsoft_24_regular"
+    },
+    "background": {
+      "entrypoint": "background.html"
     },
     "publishedDataTypes": [],
     "databaseSources": []

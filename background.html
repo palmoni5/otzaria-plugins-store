@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+  <meta charset="utf-8">
+  <title>חנות תוספים — רקע</title>
+</head>
+<body>
+<!--
+  קובץ כניסה ייעודי לרקע (contributes.background.entrypoint).
+  נטען ב-WebView נסתר עם עליית אוצריא כשהמשתמש אישר את הרשאת app.run_on_startup.
+  אין כאן UI/CSS/framework — רק לוגיקת headless שבודקת אם יש עדכונים לתוספים
+  המותקנים או תוספים חדשים בחנות, ואם כן — מציגה הודעה בתוך האפליקציה שמפנה
+  את המשתמש לתוסף חנות התוספים. דף ה-UI המלא (index.html) ממשיך להציג את המודל
+  והטוסט כשהמשתמש נכנס ללשונית.
+-->
+<script>
+  const API = 'https://otzaria.org/api/plugins';
+
+  // ── השוואת גרסאות SemVer (זהה ל-index.html) ──────────────────────
+  function compareVersions(a, b) {
+    const parse = v => String(v ?? '').split('.').map(n => parseInt(n, 10) || 0);
+    const pa = parse(a), pb = parse(b);
+    const len = Math.max(pa.length, pb.length);
+    for (let i = 0; i < len; i++) {
+      const d = (pa[i] || 0) - (pb[i] || 0);
+      if (d !== 0) return d > 0 ? 1 : -1;
+    }
+    return 0;
+  }
+
+  // גרסה (חיה או היסטורית) תואמת רק אם גרסת אוצריא בטווח [compatibleWith, maxAppVersion].
+  function isVersionCompatible(v, appVersion) {
+    if (!appVersion) return true;
+    if (v.compatibleWith && compareVersions(appVersion, v.compatibleWith) < 0) return false;
+    if (v.maxAppVersion && compareVersions(appVersion, v.maxAppVersion) > 0) return false;
+    return true;
+  }
+
+  // כל הגרסאות הזמינות לתוסף (versions מה-API החדש, או הגרסה החיה היחידה ב-API ישן).
+  function pluginVersionCandidates(p) {
+    if (Array.isArray(p.versions) && p.versions.length) return p.versions;
+    return [{ version: p.version, compatibleWith: p.compatibleWith, maxAppVersion: p.maxAppVersion, downloadUrl: p.downloadUrl, isLatest: true }];
+  }
+
+  // תוסף אפקטיבי שגרסתו היא הגרסה התואמת הגבוהה ביותר; null אם אין אף תואמת.
+  function toEffectivePlugin(p, appVersion) {
+    const best = pluginVersionCandidates(p)
+      .filter(v => isVersionCompatible(v, appVersion))
+      .sort((a, b) => compareVersions(b.version, a.version))[0];
+    if (!best) return null;
+    return { ...p, version: best.version, downloadUrl: best.downloadUrl || p.downloadUrl };
+  }
+
+  // ── מעקב אחר "תוספים חדשים בחנות" לצורך הודעת הרקע ──────────────────
+  // מפתח נפרד מזה של דף ה-UI (otzaria_store_known_plugins_v2), כדי שהודעת
+  // הרקע לא תתנגש עם הטוסט בתוך החנות ולא תשבש את ה-state שלו.
+  const BG_SEEN_KEY = 'otzaria_store_bg_seen_ids_v1';
+
+  function readJson(key) {
+    try { return JSON.parse(localStorage.getItem(key)); } catch { return null; }
+  }
+  function writeJson(key, val) {
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+  }
+
+  async function checkAndNotify(payload) {
+    const appVersion = payload && payload.app ? payload.app.version : null;
+
+    // משיכת הקטלוג ורשימת המותקנים במקביל
+    const [fetchRes, installedRes] = await Promise.all([
+      Otzaria.call('network.fetch', { url: API }),
+      Otzaria.call('plugin.listInstalled', {}),
+    ]);
+    if (!fetchRes.success || fetchRes.data.status !== 200) return;
+
+    let catalog = JSON.parse(fetchRes.data.body);
+    // לכל תוסף בוחרים את הגרסה התואמת הגבוהה ביותר (כמו בדף ה-UI). תוסף ללא אף
+    // גרסה תואמת אינו נחשב לעדכון/חדש; עדכון נמדד מול הגרסה התואמת — כך המשתמש
+    // מתעדכן לגרסה התומכת גם אם הגרסה האחרונה אינה תואמת אצלו.
+    catalog = catalog.map(p => toEffectivePlugin(p, appVersion)).filter(Boolean);
+
+    const installed = installedRes.success ? installedRes.data : [];
+    const installedNames = new Set(installed.map(p => p.name));
+
+    // עדכונים: גרסה בחנות גבוהה מהמותקנת
+    const updates = installed.filter(inst =>
+      catalog.some(p => p.name === inst.name && compareVersions(p.version, inst.version) > 0));
+
+    // תוספים חדשים בחנות מאז הבדיקה הקודמת (לא מותקנים אצל המשתמש)
+    const seen = readJson(BG_SEEN_KEY);
+    const currentIds = catalog.map(p => p.id);
+    let newPlugins = [];
+    if (Array.isArray(seen)) {
+      const seenSet = new Set(seen);
+      newPlugins = catalog.filter(p => !seenSet.has(p.id) && !installedNames.has(p.name));
+    }
+    // תמיד מעדכנים את ה-baseline (בטעינה ראשונה רק שומרים, בלי הודעת "חדש")
+    writeJson(BG_SEEN_KEY, currentIds);
+
+    if (updates.length === 0 && newPlugins.length === 0) return;
+
+    // ניסוח ההודעה לפי מה שנמצא
+    let message;
+    if (updates.length > 0 && newPlugins.length > 0) {
+      message = 'יש עדכונים זמינים לתוספים שברשותך וגם תוספים חדשים בחנות. לפרטים, פתחו את תוסף חנות התוספים.';
+    } else if (updates.length > 0) {
+      message = 'יש עדכונים זמינים לתוספים שברשותך. לפרטים, פתחו את תוסף חנות התוספים.';
+    } else {
+      message = newPlugins.length === 1
+        ? 'יש תוסף חדש בחנות התוספים. לפרטים, פתחו את תוסף חנות התוספים.'
+        : `יש ${newPlugins.length} תוספים חדשים בחנות התוספים. לפרטים, פתחו את תוסף חנות התוספים.`;
+    }
+
+    await Otzaria.call('notifications.showInApp', { message, type: 'info' });
+  }
+
+  // כל הלוגיקה מתחילה מ-plugin.boot. רצים רק ב-instance הרקע (runMode === 'background')
+  // וכשההרשאה אכן הוענקה — כך ההודעה לא תישלח שוב כשהמשתמש נכנס ללשונית.
+  Otzaria.on('plugin.boot', async (payload) => {
+    try {
+      const isBackground = payload && payload.app && payload.app.runMode === 'background';
+      const hasStartupPerm = payload && Array.isArray(payload.permissions)
+        && payload.permissions.includes('app.run_on_startup');
+      if (!isBackground || !hasStartupPerm) return;
+      await checkAndNotify(payload);
+    } catch {
+      // כשל ברקע (רשת/JSON) — שקט, לא מטרידים את המשתמש בעליית האפליקציה
+    }
+  });
+</script>
+</body>
+</html>
